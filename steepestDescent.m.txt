@@ -1,4 +1,36 @@
- clc
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+clc
  clear all
  format short
  syms x1 x2;
