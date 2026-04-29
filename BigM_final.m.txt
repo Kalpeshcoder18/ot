@@ -1,0 +1,104 @@
+clc;
+clear;
+format short;
+% Problem:
+% Max Z = 3x1 + 2x2
+% Subject to:
+% x1 + x2 <= 2
+% x1 + 3x2 <= 3
+% x1 - x2  = 1
+% x1, x2 >= 0
+M = 1e6;
+% Coefficient matrices
+a = [2 1;1 3;0 1];
+b = [2;3;4];
+c = [3 -1];
+
+numVar=size(a,2);
+% Slack variables (<= constraints)
+s = [-1 0 0;0 1 0;0 0 1];
+
+% Artificial variable (only for equality constraint)
+art = [1;0;0];
+
+% Augmented matrix
+A = [a s art b]
+
+% Cost Vector
+cost = zeros(1, size(A,2));
+cost(1:numVar) = c;
+
+% Assign -M to artificial variable
+cost(numVar+size(s,2) + 1 : end-1) = -M;
+
+% Initial Basic Variables
+BV = [4 5 6];   % a1, s2, s3
+
+% Compute Zj - Cj
+ZjCj = cost(BV) * A - cost;
+
+% Initial table
+ZC = [ZjCj; A];
+simplex = array2table(ZC);
+simplex.Properties.VariableNames = {'x1','x2','s1','s2','s3','a1','sol'};
+
+disp('Initial Simplex Table:');
+disp(simplex);
+
+% SIMPLEX ITERATION
+RUN = true;
+while RUN
+    if any(ZjCj < 0)
+        fprintf('Current solution is NOT optimal\n');
+        
+        % Entering variable
+        ZC_row = ZjCj(1:end-1);
+        [Enter_var, pvt_col] = min(ZC_row);
+        
+        % Check unbounded
+        if all(A(:,pvt_col) <= 0)
+            error('LPP is unbounded');
+        else
+            % Ratio test
+            sol = A(:,end);
+            column = A(:,pvt_col);
+            for i=1:size(A,1)
+                if column(i)>0
+                    ratio(i) = sol(i)./column(i);
+                else
+                    ratio(i)=inf;
+                end
+            end
+            [leaving_var, pvt_row] = min(ratio);
+        end
+
+        % Update basic variable
+        BV(pvt_row) = pvt_col;
+        % Pivot operation
+        pvt_key = A(pvt_row, pvt_col);
+        A(pvt_row,:) = A(pvt_row,:) / pvt_key;
+        
+        for i = 1:size(A,1)
+            if i ~= pvt_row
+                A(i,:) = A(i,:) - A(i,pvt_col) * A(pvt_row,:);
+            end
+        end
+        
+        % Update Zj - Cj
+        ZjCj = ZjCj - ZjCj(pvt_col) * A(pvt_row,:);
+        
+        % Display table
+        ZC1 = [ZjCj; A];
+        table = array2table(ZC1);
+        table.Properties.VariableNames = {'x1','x2','s1','s2','s3','a1','sol'};
+        
+        disp('Updated Simplex Table:');
+        disp(table);
+        
+    else
+        RUN = false;
+        disp('Final Basic Variables:');
+        disp(BV);
+        fprintf('The current BFS is optimal\n');
+    end
+end

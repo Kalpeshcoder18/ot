@@ -1,0 +1,54 @@
+clc
+clear all
+format short
+%input information
+Cost=[11 20 7 8;21 16 10 12;8 12 18 9];
+A=[50 40 70]; %supply
+B=[30 25 35 40]; %demand
+%To check unbalanced/balanced
+if sum(A)==sum(B)
+    fprintf('Given transportation problem is balanced \n');
+else
+    fprintf('Given transportation problem is unbalanced \n');
+    if sum(A)<sum(B)
+        Cost(end+1,:)=zeros(1,size(B,2));
+        A(end+1)=sum(B)-sum(A);
+    elseif sum(B)<sum(A)
+        Cost(:,end+1)=zeros(1,size(A,2));
+        B(end+1)=sum(A)-sum(B);
+    end
+end
+ICost=Cost;
+X=zeros(size(Cost)); %initialize allocation
+[m,n]=size(Cost);% Finding number of rows and columns
+BFS=m+n-1; %Total no, of BFS
+for i=1:size(Cost,1)
+    for j=1:size(Cost,2)
+        hh=min(Cost(:));  %Find minimum cost value
+        [Row_index,Col_index]=find(hh==Cost);  %%find position of minimum (jahan jahan pe min  hai (yahan min 0 hai) - Row index=1 2 3 ColIndex-5)
+        x11=min(A(Row_index),B(Col_index));
+        [Value,index]=max(x11); % find maximum allocation
+        ii=Row_index(index);  %Identify row position
+        jj=Col_index(index);  %Identify column position
+        y11=min(A(ii),B(jj)); %Find the value
+        X(ii,jj)=y11;
+        A(ii)=A(ii)-y11;
+        B(jj)=B(jj)-y11;
+        Cost(ii,jj)=inf;
+    end
+end
+%print the initial BFS
+fprintf('Initial BFS \n')
+IBFS=array2table(X);
+disp(IBFS)
+
+%Check for degenerate and non-degenerate
+TotalBFS=length(nonzeros(X));
+if TotalBFS==BFS
+    fprintf('Initial BFS is non-degenerate \n')
+else
+    fprintf('Initial BFS is degenerate \n')
+end
+%Compute the initial Transportation cost
+InitialCost=sum(sum(ICost.*X));
+fprintf('Initial BFS Cost is =%d \n',InitialCost)
