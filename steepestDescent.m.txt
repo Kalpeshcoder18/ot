@@ -74,7 +74,7 @@ while norm(gradx(x0)) > tol && iter < maxiter
     S = -gradx(x0);
     
     lambda = (S' * S) / (S' * H * S);
-    
+    fprintf('lambda = %f\n', lambda);
     Xnew = x0 + lambda .* S';
     x0 = Xnew;
     
